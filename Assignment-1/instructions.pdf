@@ -1,0 +1,53 @@
+SYSC 4001 Operating Systems, Fall 2013 
+
+Programming Assignment 1: Patient Monitor 
+Due: Thursday, Oct. 10th, 2013 @ 2pm after the lab session 
+ 
+Purpose: The assignment is to build a simplified Patient Monitor using system calls related to process management. 
+The process management aspect of this assignment includes creation of a new process, handling of 
+signals/interrupts/timers, and synchronization via message passing. IPC mechanisms include signals, pipes (FIFOs) 
+and message queues. In addition, the assignment deals with the client/server model. 
+Some basic information: To solve this assignment, you need to understand basic Unix/Linux processes and IPC 
+concepts. The reference book provides you a solid background and concrete examples. It is strongly recommended 
+that you read related materials in the reference book, particularly chapters 11 (processes and signals), 13 (FIFOs) and 
+14 (Message Queues), or other relevant references. 
+IPC describes different ways of message passing between processes that are running on an operating system. IPC is a 
+key feature for any modern OS that allows processes without sharing the same address space to communicate with 
+each other and to synchronize their actions. There are several IPC mechanisms provided by Unix/Linux. This 
+assignment will experiment signals, named pipes (FIFOs), and message queues in addition to process creation using 
+the fork() function. 
+Assignment description: 
+This assignment is to simulate a hypothetical Patient Monitor System (PMS). The PMS can monitor the heartbeat and 
+play music with different tempos according to the heartbeat rate. Specially, consider two processes, Monitor and 
+Controller that are used for the PMS. When the heartbeat rate crosses a pre-defined threshold, the Monitor process will 
+send a message to the Controller process. There are multiple Monitor processes, but only one Controller process. 
+ 
+Monitor Process: 
+The Monitor process monitors the heartbeat periodically. The Monitor process has both parent and child portions. The 
+parent first sends a connect request to the Controller process via a FIFO. The FIFO needs to be created using the 
+Client/Server model as illustrated in the Linux reference book. (We will discuss it in class and you will practice it in 
+the lab.) After the FIFO is created, Monitor will start the operation after it receives a start message from the Controller 
+via a FIFO. When the parent receives a stop message from the Controller, it sends a signal to its child to terminate the 
+operation. 
+ 
+The Monitor process also has a child process which actually monitors the heartbeat periodically and sends the 
+heartbeat rate to the message queue. A heartbeat rate is simply a random number between 60 and 100. The monitoring 
+interval could be 2-3 seconds for this assignment. The main point is to demonstrate the operations and outputs clearly. 
+ 
+Controller Process: 
+The Controller is primarily used to control or coordinate other processes. The Controller process also has parent and 
+child. The parent process acts as the server using FIFOs. It receives connect requests from other processes. When it 
+receives the first connect request message from another process, it replies a start message. The parent also keeps track 
+of user commands. For this assignment, there is only one necessary command - <control-C> - meaning that the user 
+stops the PMS machine. When it happens, the parent process sends a signal to the child process, and the parent also 
+sends a stop message via FIFOs to all other processes and terminates its operation. 
+ 
+The child process receives a message periodically from the Monitor process via a message queue. The message mainly 
+contains the sender information (PID and patient name) and the heartbeat rate. The child process of Controller only 
+echoes the process information and the heartbeat value it receives. The child process also sends an ACK message back 
+to the sender for each message it receives. 
+ 
+Inter-processor Communications: 
+Because multiple Monitor processes are running concurrently, each Monitor process needs a unique name (patient 
+name). Each Monitor process establishes a pair of FIFOs with the parent component of the Controller process, as 
+explained above, using the Client-Server model (the same model used in the Linux reference book). On the other hand, 
